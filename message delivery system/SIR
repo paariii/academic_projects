@@ -1,0 +1,332 @@
+clc;
+delete('Trace_SIR.xlsx');
+%We need to repeat 700times
+counter = 1;
+%We have to ignore warm Up time data
+Warm_Up = 250;
+ 
+while counter<=700
+    
+    %Servers' situations
+    S = zeros(5,1);
+    %Num of messages serviced by servers
+    M = zeros(5,1);
+    %Idle time from last service
+    I = zeros(5,1);
+    %Total idle time
+    Idle = zeros(5,1);
+    %Total idle time for output
+    Idle_out = zeros(5,1);
+    %Simulation Clock
+    clock = 0;
+    %time of previous event
+    P_clock = 0;
+    %Departures related to each server
+    %If a server is idle his/her departure is inf
+    %Servicing meesage Departure
+    Departure = inf(5,1);
+    %Last message departure
+    L_Departure = zeros(5,1);
+    %Mean of service times
+    M_s = [6;8;10;12;14];
+    %Mean of arrival times
+    M_a = 2.8;
+    %Arrival Time
+    Arr = 0;
+    %How many messages did we have till this time
+    Num = 0;
+    %Which message relates to ith server
+    SM = zeros(5,1);
+    %End of simulation
+    E = 1000;
+    %Counter for trace rows
+    n = 1;
+    
+    %Necessary Matrices for trace :
+    %CLOCK
+    %Event
+    %Num_m
+    %lose
+    %Chosen_Server
+    %L1(t)
+    %L2(t)
+    %L3(t)
+    %L4(t)
+    %L5(t)
+    %FEL_D1
+    %FEL_D2
+    %FEL_D3
+    %FEL_D4
+    %FEL_D5
+    %FEL_A
+    %FEL_E
+    %U1(t)
+    %U2(t)
+    %U3(t)
+    %U4(t)
+    %U5(t)
+    %I1(t)
+    %I2(t)
+    %I3(t)
+    %I4(t)
+    %I5(t)
+    
+    clock = expo(M_a);
+    Event = "Arrival";
+    
+    while clock<=E
+        
+        if counter == 1
+            %Creating trace
+            CLOCK(n,1) = clock;
+            EVENT(n,1) = Event;
+        end
+        
+        if Event == "Arrival"
+            
+            %Increase Num of Messages
+            Num = Num+1;
+          
+            %Find availabe servers
+            Ava = find(S==0);
+            
+            %If there is no available server, increase lost messages
+            if isempty(Ava)== 1
+                
+                if counter ==1
+                    lose(n,1) = "Lost";
+                    Chosen_Server(n,1) = "-";
+                end
+                
+                %Generate next arrival time
+                Arr = clock + expo(M_a);
+                
+                %Update clock
+                P_clock = clock;
+                min_d = min(min(Departure));
+                if min_d<= Arr
+                    Event = "Departure";
+                    clock = min_d;
+                else
+                    Event = "Arrival";
+                    clock = Arr;
+                end
+                
+            %If we have available servers
+            else
+                
+                %Idle times from last service
+                I(Ava,1) = clock - L_Departure(Ava,1);
+                %Choose one of the servers
+                %Choose min of idle times of available servers
+                min_I = min(min(I(Ava,1)));
+                Chosen_s = find(I==min_I);
+                S(Chosen_s(1,1),1) = 1;
+                SM(Chosen_s(1,1),1) = Num;
+                
+                %Servers' total idle time
+                Idle(Ava,1) = Idle(Ava,1)+ (clock - P_clock);
+                
+                if clock>=Warm_Up
+                    %Incerase serever's messages
+                    M(Chosen_s(1,1),1) = M(Chosen_s(1,1),1)+1;
+                    %Servers' total idle time
+                    Idle_out(Ava,1) = Idle_out(Ava,1)+ (clock - P_clock);
+                end
+                
+                %Generate service time & departure
+                Service_time = expo(M_s(Chosen_s(1,1),1));
+                Departure(Chosen_s(1,1),1) = clock+Service_time;
+                
+                %Generate next arrival time
+                Arr = clock + expo(M_a);
+                
+                %Update clock
+                P_clock = clock;
+                min_d = min(min(Departure));
+                if min_d<= Arr
+                    Event = "Departure";
+                    clock = min_d;
+                else
+                    Event = "Arrival";
+                    clock = Arr;
+                end
+                
+                if counter ==1
+                    lose(n,1) = "Received";
+                    Chosen_Server(n,1) = Chosen_s(1,1);
+                end
+                
+            end
+            
+            if counter == 1
+                %Update trace's matrices
+                Num_m(n,1) = Num;
+                FEL_D1(n,1)= Departure(1,1);
+                FEL_D2(n,1)= Departure(2,1);
+                FEL_D3(n,1)= Departure(3,1);
+                FEL_D4(n,1)= Departure(4,1);
+                FEL_D5(n,1)= Departure(5,1);
+                FEL_E(n,1) = 1000;
+                FEL_A(n,1) = Arr;
+                L1(n,1) = S(1,1);
+                L2(n,1) = S(2,1);
+                L3(n,1) = S(3,1);
+                L4(n,1) = S(4,1);
+                L5(n,1) = S(5,1);
+                U1(n,1) = M(1,1)/sum(M,'all');
+                U2(n,1) = M(2,1)/sum(M,'all');
+                U3(n,1) = M(3,1)/sum(M,'all');
+                U4(n,1) = M(4,1)/sum(M,'all');
+                U5(n,1) = M(5,1)/sum(M,'all');
+                I1(n,1) = Idle_out(1,1);
+                I2(n,1) = Idle_out(2,1);
+                I3(n,1) = Idle_out(3,1);
+                I4(n,1) = Idle_out(4,1);
+                I5(n,1) = Idle_out(5,1);
+            end
+            
+        elseif Event == "Departure"
+            
+            %Find availabe servers
+            Ava = find(S==0);
+            
+            %Servers' total idle time
+            Idle(Ava,1) = Idle(Ava,1)+ (clock - P_clock);
+            
+            if clock>=Warm_Up
+                %Servers' total idle time
+                Idle_out(Ava,1) = Idle_out(Ava,1)+ (clock - P_clock);
+            end
+            
+            %Find server
+            server_num = find(Departure==clock);
+            S(server_num(1,1),1) = 0;
+            L_Departure(server_num(1,1),1) = Departure(server_num(1,1),1);
+            Departure(server_num(1,1),1) = inf;
+            
+            %Update clock
+            P_clock = clock;
+            min_d = min(min(Departure));
+            if min_d<= Arr
+                Event = "Departure";
+                clock = min_d;
+            else
+                Event = "Arrival";
+                clock = Arr;
+            end
+            
+            if counter == 1
+                %Update trace's matrices
+                Num_m(n,1) = SM(server_num,1);
+                FEL_D1(n,1)= Departure(1,1);
+                FEL_D2(n,1)= Departure(2,1);
+                FEL_D3(n,1)= Departure(3,1);
+                FEL_D4(n,1)= Departure(4,1);
+                FEL_D5(n,1)= Departure(5,1);
+                FEL_E(n,1) = 1000;
+                FEL_A(n,1) = Arr;
+                Chosen_Server(n,1) = "-";
+                lose(n,1) = "-";
+                L1(n,1) = S(1,1);
+                L2(n,1) = S(2,1);
+                L3(n,1) = S(3,1);
+                L4(n,1) = S(4,1);
+                L5(n,1) = S(5,1);
+                U1(n,1) = M(1,1)/sum(M,'all');
+                U2(n,1) = M(2,1)/sum(M,'all');
+                U3(n,1) = M(3,1)/sum(M,'all');
+                U4(n,1) = M(4,1)/sum(M,'all');
+                U5(n,1) = M(5,1)/sum(M,'all');
+                I1(n,1) = Idle_out(1,1);
+                I2(n,1) = Idle_out(2,1);
+                I3(n,1) = Idle_out(3,1);
+                I4(n,1) = Idle_out(4,1);
+                I5(n,1) = Idle_out(5,1);
+            end
+        end
+        
+        if counter == 1
+            %Going to next row in trace
+            n = n+1;
+        end
+    end
+    
+    if counter == 1
+        CLOCK(n,1) = E;
+        EVENT(n,1) = "End";
+        Num_m(n,1) = "-";
+        Chosen_Server(n,1) = "-";
+        L1(n,1) = "-";
+        L2(n,1) = "-";
+        L3(n,1) = "-";
+        L4(n,1) = "-";
+        L5(n,1) = "-";
+        lose(n,1) = "-";
+        FEL_D1(n,1) = "-";
+        FEL_D2(n,1) = "-";
+        FEL_D3(n,1) = "-";
+        FEL_D4(n,1) = "-";
+        FEL_D5(n,1) = "-";
+        FEL_E(n,1) = "-";
+        FEL_A(n,1) = "-";
+        U1(n,1) = U1(n-1,1);
+        U2(n,1) = U2(n-1,1);
+        U3(n,1) = U3(n-1,1);
+        U4(n,1) = U4(n-1,1);
+        U5(n,1) = U5(n-1,1);
+        I1(n,1) = I1(n-1,1);
+        I2(n,1) = I2(n-1,1);
+        I3(n,1) = I3(n-1,1);
+        I4(n,1) = I4(n-1,1);
+        I5(n,1) = I5(n-1,1);
+    
+        T1 = table(CLOCK,EVENT,Num_m,Chosen_Server,L1,L2,L3,L4,L5,lose,FEL_D1,FEL_D2,FEL_D3,FEL_D4,FEL_D5,FEL_A,FEL_E,U1,U2,U3,U4,U5,I1,I2,I3,I4,I5);
+        fileName='Trace_SIR.xlsx';
+        writetable(T1,fileName);
+        winopen(fileName);
+    end
+    
+    Ser_u = M/sum(M,'all');
+    
+    utilization(:,counter) = Ser_u;
+    Idleness(:,counter) = Idle_out;
+    
+    counter = counter+1;
+end
+ 
+ 
+Title = ["Min";"Max";"Mean";"Std"];
+i = 1;
+while i<=5 
+    U_Server(1,i) = min(min(utilization(i,:)));
+    U_Server(2,i) = max(max(utilization(i,:)));
+    U_Server(3,i) = mean(utilization(i,:));
+    U_Server(4,i) = sqrt(var(utilization(i,:)));
+    
+    i = i+1;
+end
+    
+i = 1;
+while i<=5 
+    I_Server(1,i) = min(min(Idleness(i,:)));
+    I_Server(2,i) = max(max(Idleness(i,:)));
+    I_Server(3,i) = mean(Idleness(i,:));
+    I_Server(4,i) = sqrt(var(Idleness(i,:)));
+    
+    i = i+1;
+end
+ 
+seperator = ["*";"*";"*";"*"];
+ 
+T2 = table(Title,U_Server,seperator,I_Server);
+fileNamee = 'IU_SIR.xlsx';
+writetable(T2,fileNamee);
+winopen(fileNamee);
+ 
+function e = expo(beta)
+%beta = mean of distribution
+e = (-1*log(rand(1))*beta);
+end
+
+
