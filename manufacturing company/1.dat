@@ -1,0 +1,24 @@
+/*********************************************
+ * OPL 12.6.0.0 Data
+ * Author: parisa
+ * Creation Date: Nov 30, 2018 at 11:13:31 AM
+ *********************************************/
+d = [700, 600, 500, 800, 900, 800];
+ps = 10;
+pf = 700;
+ph = 500;
+pe = 5;
+pw = 20;
+max_e = 6;
+max_f = 5;
+max_h = 5;
+i_workers = 40;
+//connection between opl & excel
+SheetConnection Sheet("orr2.xlsx");
+l to SheetWrite(Sheet,"sheet1!B2:G2");
+hl to SheetWrite(Sheet,"sheet1!B3:G3");
+fl to SheetWrite(Sheet,"sheet1!B4:G4");
+npro to SheetWrite(Sheet,"sheet1!B5:G5");
+epro to SheetWrite(Sheet,"sheet1!B6:G6");
+s to SheetWrite(Sheet,"sheet1!B7:G7");
+horf to SheetWrite(Sheet,"sheet1!B8:G8");
