@@ -1,0 +1,16 @@
+
+/*********************************************
+ * OPL 12.6.0.0 Data
+ * Author: parisa
+ * Creation Date: Dec 1, 2018 at 11:58:46 AM
+ *********************************************/
+max_d = [ 5300, 4500, 5400];
+min_d = [ 20, 20, 16];
+max_p = [ 500, 450, 550];
+pro_cost = [ 73.3, 52.9, 65.4];
+price= [ 124, 109, 115];
+s_cost = [ 170000, 150000, 100000];
+//connection between opl & excel
+SheetConnection Sheet("or2.xlsx");
+p to SheetWrite(Sheet,"sheet1!B2:D2");
+x to SheetWrite(Sheet,"Sheet1!B3:D3");
